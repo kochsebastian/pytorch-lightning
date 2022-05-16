@@ -31,10 +31,11 @@ if _OMEGACONF_AVAILABLE:
 
 
 class CheckpointConnector:
-    def __init__(self, trainer, resume_from_checkpoint: Optional[Union[str, Path]] = None):
+    def __init__(self, trainer, resume_from_checkpoint: Optional[Union[str, Path]] = None, restore_optimizer: Optional[bool] = True):
         self.trainer = trainer
         self.resume_checkpoint_path = resume_from_checkpoint
         self._loaded_checkpoint = {}
+        self.restore_optimizer = restore_optimizer
 
     @property
     def hpc_resume_path(self) -> Optional[str]:
@@ -221,17 +222,18 @@ class CheckpointConnector:
 
     def restore_optimizers_and_schedulers(self) -> None:
         """Restores the optimizers and learning rate scheduler states from the pre-loaded checkpoint."""
+        
         if not self._loaded_checkpoint:
             return
-
         # validation
         if "optimizer_states" not in self._loaded_checkpoint or "lr_schedulers" not in self._loaded_checkpoint:
             raise KeyError(
                 "Trying to restore training state but checkpoint contains only the model."
                 " This is probably due to `ModelCheckpoint.save_weights_only` being set to `True`."
             )
-        self.restore_optimizers()
-        self.restore_lr_schedulers()
+        if self.restore_optimizer:
+            self.restore_optimizers()
+            self.restore_lr_schedulers()
 
     def restore_optimizers(self) -> None:
         """Restores the optimizer states from the pre-loaded checkpoint."""
