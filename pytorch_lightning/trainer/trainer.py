@@ -163,6 +163,7 @@ class Trainer(
         move_metrics_to_cpu: bool = False,
         multiple_trainloader_mode: str = "max_size_cycle",
         stochastic_weight_avg: bool = False,
+        restore_optimizer = False
     ):
         r"""
         Customize every aspect of training via flags
@@ -338,6 +339,8 @@ class Trainer(
             stochastic_weight_avg: Whether to use `Stochastic Weight Averaging (SWA)
                 <https://pytorch.org/blog/pytorch-1.6-now-includes-stochastic-weight-averaging/>_`
 
+            restore_optimizer: Whether to restore the opimizer and learning rate scheduler state
+
         """
         super().__init__()
         Trainer._log_api_event("init")
@@ -375,7 +378,7 @@ class Trainer(
         self.callback_connector = CallbackConnector(self)
         self.debugging_connector = DebuggingConnector(self)
         self.training_tricks_connector = TrainingTricksConnector(self)
-        self.checkpoint_connector = CheckpointConnector(self, resume_from_checkpoint)
+        self.checkpoint_connector = CheckpointConnector(self, resume_from_checkpoint, restore_optimizer)
         self.slurm_connector = SLURMConnector(self)
         self.tuner = Tuner(self)
 
